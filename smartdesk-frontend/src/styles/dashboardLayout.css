@@ -1,0 +1,43 @@
+.dashboard-page{
+
+    padding:35px;
+
+    background:#f5f7fb;
+
+    min-height:100vh;
+
+}
+
+.page-title{
+
+    font-size:32px;
+
+    font-weight:700;
+
+    color:#1e293b;
+
+}
+
+.page-subtitle{
+
+    color:#64748b;
+
+    margin-top:8px;
+
+    margin-bottom:35px;
+
+}
+
+.section{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:25px;
+
+    margin-top:25px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.06);
+
+}

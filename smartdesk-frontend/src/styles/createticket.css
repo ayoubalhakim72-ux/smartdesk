@@ -1,0 +1,77 @@
+.create-container{
+
+    max-width:700px;
+
+    margin:auto;
+
+    background:white;
+
+    padding:40px;
+
+    border-radius:15px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+
+}
+
+.create-container h1{
+
+    margin-bottom:30px;
+
+}
+
+.create-container form{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+
+}
+
+.create-container input,
+.create-container textarea,
+.create-container select{
+
+    padding:14px;
+
+    border-radius:10px;
+
+    border:1px solid #ddd;
+
+    font-size:15px;
+
+}
+
+.create-container textarea{
+
+    height:150px;
+
+    resize:none;
+
+}
+
+.create-container button{
+
+    background:#2563eb;
+
+    color:white;
+
+    border:none;
+
+    padding:15px;
+
+    border-radius:10px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+}
+
+.create-container button:hover{
+
+    background:#1d4ed8;
+
+}

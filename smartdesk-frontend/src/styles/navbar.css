@@ -1,0 +1,111 @@
+.navbar{
+
+    height:80px;
+
+    background:white;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 40px;
+
+    box-shadow:0 2px 12px rgba(0,0,0,.05);
+
+}
+
+.navbar h2{
+
+    color:#0F172A;
+
+}
+
+.navbar p{
+
+    color:#64748B;
+
+}
+
+.navbar-right{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:35px;
+
+}
+
+.notification{
+
+    position:relative;
+
+    font-size:24px;
+
+    color:#2563EB;
+
+    cursor:pointer;
+
+}
+
+.notification-badge{
+
+    position:absolute;
+
+    top:-8px;
+
+    right:-10px;
+
+    background:red;
+
+    color:white;
+
+    border-radius:50%;
+
+    width:18px;
+
+    height:18px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:11px;
+
+}
+
+.user-info{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+.avatar{
+
+    font-size:45px;
+
+    color:#2563EB;
+
+}
+
+.user-info h4{
+
+    margin:0;
+
+}
+
+.user-info p{
+
+    margin:0;
+
+    color:#64748B;
+
+}
