@@ -8,6 +8,7 @@ import {
     FaEdit,
     FaTrash,
     FaEye,
+    FaUserPlus,
     FaPlus
 } from "react-icons/fa";
 
@@ -34,6 +35,7 @@ const role =
     useEffect(() => {
     loadTickets();
 }, [ticketView]);
+
 
     async function loadTickets() {
 
@@ -87,6 +89,22 @@ const role =
 
         }
 
+    }
+    async function claimTicket(id) {
+       try {
+        const response = await api.put(
+            `/tickets/${id}/assign`
+        );
+
+        alert(response.data.message);
+
+        loadTickets();
+    } catch (error) {
+        alert(
+            error.response?.data?.message ||
+            "Failed to claim ticket."
+        );
+    }
     }
 
     const filteredTickets = tickets.filter(ticket =>
@@ -264,7 +282,7 @@ const role =
                                             <FaEdit />
 
                                         </button>
-
+                                        {(role === "Admin") &&(
                                         <button
                                             className="action-btn delete"
                                             title="Delete"
@@ -274,6 +292,23 @@ const role =
                                             <FaTrash />
 
                                         </button>
+                                        )}
+                                        {(role === "Admin" || role === "IT Support Agent") && ticket.assignedto === null && (
+
+                                        <button
+                                         className="action-btn assign"
+                                         title="Asign"
+                                         onClick={()=>{
+                                            if(role === "IT Support Agent")
+                                            { claimTicket(ticket.id) }
+                                            else
+                                            { navigate(`/tickets/assign/${ticket.id}`) }
+                                         }}
+                                        >
+                                            <FaUserPlus />
+
+                                        </button>
+                                        )}
 
                                     </div>
 

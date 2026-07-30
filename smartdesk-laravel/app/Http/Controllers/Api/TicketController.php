@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\Status;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\UpdateTicketRequest;
+use Illuminate\Http\Request;
 
 class TicketController extends Controller
 {
@@ -330,56 +331,83 @@ public function destroy($id)
         'message'=>'Ticket deleted successfully.'
     ]);
 }
-public function assign(UpdateTicketRequest $request, $id)
+public function assign(Request $request, $id)
 {
     $user = Auth::user();
     $user->load('role');
 
-    if(!in_array($user->role->role,['Admin','IT Support Agent'])){
-
+    if (!$user->role) {
         return response()->json([
-            'message'=>'Unauthorized.'
-        ],403);
+            'message' => 'User role not found.'
+        ], 403);
+    }
 
+    $role = $user->role->role;
+
+    if (!in_array($role, ['Admin', 'IT Support Agent'])) {
+        return response()->json([
+            'message' => 'Unauthorized.'
+        ], 403);
     }
 
     $ticket = Ticket::find($id);
 
-    if(!$ticket){
-
+    if (!$ticket) {
         return response()->json([
-            'message'=>'Ticket not found.'
-        ],404);
-
+            'message' => 'Ticket not found.'
+        ], 404);
     }
 
-    if($user->role->role == 'Admin'){
+    // Only unassigned tickets can be claimed or assigned
+    if ($ticket->assignedto !== null) {
+        return response()->json([
+            'message' => 'This ticket is already assigned.'
+        ], 409);
+    }
 
-        $ticket->assignedto = $request->assignedto;
+    if ($role === 'Admin') {
+        $request->validate([
+            'assignedto' => [
+                'required',
+                'integer',
+                'exists:users,id'
+            ]
+        ]);
 
-    }else{
+        $agent = User::with('role')->find($request->assignedto);
 
+        if (
+            !$agent ||
+            !$agent->role ||
+            $agent->role->role !== 'IT Support Agent'
+        ) {
+            return response()->json([
+                'message' => 'The selected user must be an IT Support Agent.'
+            ], 422);
+        }
+
+        $ticket->assignedto = $agent->id;
+    } else {
+        // IT Support Agent claims the ticket for themselves
         $ticket->assignedto = $user->id;
-
     }
 
     $ticket->update_date = now();
-
     $ticket->save();
 
     return response()->json([
+        'message' => $role === 'Admin'
+            ? 'Ticket assigned successfully.'
+            : 'Ticket claimed successfully.',
 
-        'message'=>'Ticket assigned successfully.',
-
-        'ticket'=>$ticket->fresh([
+        'ticket' => $ticket->fresh([
             'creator',
             'assignedUser',
             'priority',
             'status',
             'category'
         ])
-
-    ]);
+    ], 200);
 }
 }
 

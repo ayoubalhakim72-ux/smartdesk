@@ -197,6 +197,11 @@
 .action-btn.delete {
     background: #ef4444;
 }
+.action-btn.assign
+{
+    background: #22c55e;
+}
+
 .ticket-toggle {
     display: flex;
     margin-left: auto;

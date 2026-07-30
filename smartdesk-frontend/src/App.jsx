@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Tickets from "./pages/Tickets";
 import CreateTicket from "./pages/CreateTicket";
 import EditTicket from "./pages/EditTicket";
+import Assignmen from "./pages/Assignmen";
 
 function App() {
 
@@ -21,6 +22,9 @@ function App() {
             <Route path="/create-ticket" element={<CreateTicket />} />
 
             <Route path="/tickets/edit/:id" element={<EditTicket />} />
+
+            <Route path="/tickets/assign/:id" element={<Assignmen />} />
+            
 
         </Routes>
 
