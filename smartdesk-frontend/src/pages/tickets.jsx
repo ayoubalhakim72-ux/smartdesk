@@ -20,16 +20,31 @@ function Tickets() {
 
     // Search
     const [search, setSearch] = useState("");
+   const storedUser = localStorage.getItem("user");
+const user = storedUser ? JSON.parse(storedUser) : null;
+
+const role =
+    typeof user?.role === "string"
+        ? user.role
+        : user?.role?.role ||
+          user?.role_name ||
+          user?.rolename;
+    const [ticketView, setTicketView] = useState("default");
 
     useEffect(() => {
-        loadTickets();
-    }, []);
+    loadTickets();
+}, [ticketView]);
 
     async function loadTickets() {
 
         try {
 
-            const response = await api.get(`/tickets?t=${Date.now()}`);
+            const response = await api.get("/tickets", {
+    params: {
+        t: Date.now(),
+        assigned: ticketView === "unassigned" ? "unassigned" : undefined,
+    },
+  });
 
             setTickets(response.data.tickets);
 
@@ -98,11 +113,31 @@ function Tickets() {
                 </button>
 
             </div>
+           
 
             {/* Search & Filters */}
 
-            <div className="filters">
+            < div className="filters">
 
+                {(role === "Admin" || role === "IT Support Agent") && (
+    <>
+        <button
+            type="button"
+            className={ticketView === "default" ? "active" : ""}
+            onClick={() => setTicketView("default")}
+        >
+            {role === "Admin" ? "All Tickets" : "My Tickets"}
+        </button>
+
+        <button
+            type="button"
+            className={ticketView === "unassigned" ? "active" : ""}
+            onClick={() => setTicketView("unassigned")}
+        >
+            Unassigned
+        </button>
+    </>
+)}
                 <input
                     type="text"
                     placeholder="🔍 Search tickets..."
@@ -115,12 +150,14 @@ function Tickets() {
                     <option>All Categories</option>
 
                 </select>
+                
 
                 <select>
 
                     <option>All Statuses</option>
 
                 </select>
+                
 
             </div>
 

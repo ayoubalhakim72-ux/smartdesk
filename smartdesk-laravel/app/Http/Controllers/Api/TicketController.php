@@ -30,6 +30,11 @@ class TicketController extends Controller
     switch ($user->role->role) {
 
         case 'Admin':
+              if (request('assigned') === 'unassigned') {
+            $query->whereNull('assignedto');
+        }
+
+        break;
         case 'Manager':
             break;
 
@@ -38,8 +43,13 @@ class TicketController extends Controller
             break;
 
         case 'IT Support Agent':
+             if (request('assigned') === 'unassigned') {
+            $query->whereNull('assignedto');
+        } else {
             $query->where('assignedto', $user->id);
-            break;
+        }
+
+        break;
 
         default:
             return response()->json([
