@@ -123,6 +123,7 @@ function Tickets() {
 
     const canEditTicket = (ticket) =>
         role === "Admin" ||
+        role === "Manager" ||
         role === "IT Support Agent" ||
         (role === "Employee" && ticket.assignedto === null);
 
@@ -321,6 +322,7 @@ function Tickets() {
                                                 )}
 
                                                 {(role === "Admin" ||
+                                                    role === "Manager" ||
                                                     role === "IT Support Agent") &&
                                                     ticket.assignedto === null && (
                                                         <button
