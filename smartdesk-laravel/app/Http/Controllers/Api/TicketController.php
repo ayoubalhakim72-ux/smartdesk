@@ -21,9 +21,12 @@ class TicketController extends Controller
         $user = Auth::user();
         $user->load('role');
 
-        if (!$user->role || $user->role->role !== 'Admin') {
+        if (
+            !$user->role ||
+            !in_array($user->role->role, ['Admin', 'Manager'])
+        ) {
             return response()->json([
-                'message' => 'Only administrators can view IT support agents.'
+                'message' => 'Only administrators and managers can view IT support agents.'
             ], 403);
         }
 
@@ -233,6 +236,7 @@ public function update(UpdateTicketRequest $request, $id)
     switch ($user->role->role) {
 
         case 'Admin':
+        case 'Manager':
 
             $ticket->update([
                 'title' => $request->title ?? $ticket->title,
@@ -313,12 +317,6 @@ public function update(UpdateTicketRequest $request, $id)
 
             break;
 
-        case 'Manager':
-
-            return response()->json([
-                'message'=>'Managers cannot edit tickets.'
-            ],403);
-
         default:
 
             return response()->json([
@@ -380,7 +378,7 @@ public function assign(Request $request, $id)
 
     $role = $user->role->role;
 
-    if (!in_array($role, ['Admin', 'IT Support Agent'])) {
+    if (!in_array($role, ['Admin', 'Manager', 'IT Support Agent'])) {
         return response()->json([
             'message' => 'Unauthorized.'
         ], 403);
@@ -401,7 +399,7 @@ public function assign(Request $request, $id)
         ], 409);
     }
 
-    if ($role === 'Admin') {
+    if (in_array($role, ['Admin', 'Manager'])) {
         $request->validate([
             'assignedto' => [
                 'required',
@@ -432,7 +430,7 @@ public function assign(Request $request, $id)
     $ticket->save();
 
     return response()->json([
-        'message' => $role === 'Admin'
+        'message' => in_array($role, ['Admin', 'Manager'])
             ? 'Ticket assigned successfully.'
             : 'Ticket claimed successfully.',
 
