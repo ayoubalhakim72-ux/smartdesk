@@ -464,6 +464,28 @@
     transform: translateY(-1px);
 }
 
+.ticket-page-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
+}
+
+.ticket-page-btn.close-ticket {
+    background: #16a34a;
+}
+
+.ticket-page-btn.close-ticket:hover:not(:disabled) {
+    background: #15803d;
+}
+
+.ticket-page-btn.return-ticket {
+    background: #ea580c;
+}
+
+.ticket-page-btn.return-ticket:hover:not(:disabled) {
+    background: #c2410c;
+}
+
 .ticket-page-btn.comments {
     background: #2563eb;
 }
