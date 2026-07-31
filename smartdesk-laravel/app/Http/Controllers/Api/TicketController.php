@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketRequest;
 use App\Models\Ticket;
+use App\Models\User;
 use App\Models\Status;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\UpdateTicketRequest;
@@ -12,6 +13,32 @@ use Illuminate\Http\Request;
 
 class TicketController extends Controller
 {
+    /**
+     * Get all IT support agents for the assignment page.
+     */
+    public function agents()
+    {
+        $user = Auth::user();
+        $user->load('role');
+
+        if (!$user->role || $user->role->role !== 'Admin') {
+            return response()->json([
+                'message' => 'Only administrators can view IT support agents.'
+            ], 403);
+        }
+
+        $agents = User::whereHas('role', function ($query) {
+                $query->where('role', 'IT Support Agent');
+            })
+            ->select('id', 'firstname', 'username', 'email')
+            ->orderBy('firstname')
+            ->get();
+
+        return response()->json([
+            'agents' => $agents
+        ]);
+    }
+
     /**
      * Get tickets based on user role.
      */
