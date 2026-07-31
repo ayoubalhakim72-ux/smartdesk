@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\PriorityController;
 use App\Http\Controllers\Api\StatusController;
+use App\Http\Controllers\Api\TicketCommentController;
 
 // Public route
 Route::post('/login', [AuthController::class, 'login']);
@@ -29,6 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tickets/{id}/assign', [TicketController::class, 'assign']);
     Route::put('/tickets/{id}/close', [TicketController::class, 'close']);
     Route::put('/tickets/{id}/return', [TicketController::class, 'returnTicket']);
+    Route::get('/tickets/{ticketId}/comments', [TicketCommentController::class, 'index']);
+    Route::post('/tickets/{ticketId}/comments', [TicketCommentController::class, 'store']);
 
     // Ticket form and filter options
     Route::get('/priorities', [PriorityController::class, 'index']);

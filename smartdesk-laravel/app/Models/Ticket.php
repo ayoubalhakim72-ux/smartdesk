@@ -47,4 +47,11 @@ class Ticket extends Model
     {
         return $this->belongsTo(Category::class, 'categoryid');
     }
+
+    public function comments()
+    {
+        return $this->hasMany(TicketComment::class, 'ticketid')
+            ->orderBy('date')
+            ->orderBy('id');
+    }
 }

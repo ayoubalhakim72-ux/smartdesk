@@ -33,4 +33,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class, 'roleid');
     }
+
+    public function ticketComments()
+    {
+        return $this->hasMany(TicketComment::class, 'userid');
+    }
 }
