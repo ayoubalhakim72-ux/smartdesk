@@ -255,6 +255,14 @@ public function update(UpdateTicketRequest $request, $id)
 
             }
 
+            if ($ticket->assignedto !== null) {
+
+                return response()->json([
+                    'message'=>'Assigned tickets can no longer be edited.'
+                ],403);
+
+            }
+
             $openStatus = Status::where('status','Open')->first();
 
             if ($ticket->statusid != $openStatus->id) {
