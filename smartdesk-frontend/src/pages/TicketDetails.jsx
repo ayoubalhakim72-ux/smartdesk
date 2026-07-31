@@ -119,6 +119,13 @@ function TicketDetails() {
         Number(ticket?.assignedto) === Number(user?.id) &&
         ticket?.status?.status === "In Progress";
 
+    const canOpenComments =
+        role === "Admin" ||
+        (role === "Employee" &&
+            Number(ticket?.createdby) === Number(user?.id)) ||
+        (role === "IT Support Agent" &&
+            Number(ticket?.assignedto) === Number(user?.id));
+
     return (
         <DashboardLayout>
             <div className="page-header">
@@ -289,15 +296,17 @@ function TicketDetails() {
                             </>
                         )}
 
-                        <button
-                            type="button"
-                            className="ticket-page-btn comments"
-                            onClick={() =>
-                                navigate(`/tickets/${id}/comments`)
-                            }
-                        >
-                            <FaComments /> Comments
-                        </button>
+                        {canOpenComments && (
+                            <button
+                                type="button"
+                                className="ticket-page-btn comments"
+                                onClick={() =>
+                                    navigate(`/tickets/${id}/comments`)
+                                }
+                            >
+                                <FaComments /> Comments
+                            </button>
+                        )}
 
                         <button
                             type="button"
