@@ -97,12 +97,13 @@ class TicketController extends Controller
         $query->where('categoryid', request('categoryid'));
     }
 
-    if (request()->filled('from')) {
-        $query->whereDate('creation_date', '>=', request('from'));
+    if (request()->filled('date')) {
+        $query->whereDate('creation_date', request('date'));
     }
 
-    if (request()->filled('to')) {
-        $query->whereDate('creation_date', '<=', request('to'));
+    if (request('sort') === 'newest') {
+        $query->orderByDesc('creation_date')
+            ->orderByDesc('id');
     }
 
     return response()->json([
