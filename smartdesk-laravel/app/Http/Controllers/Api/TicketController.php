@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketRequest;
 use App\Models\Ticket;
+use App\Models\TicketHistory;
 use App\Models\User;
 use App\Models\Status;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Http\Requests\UpdateTicketRequest;
 use Illuminate\Http\Request;
 
@@ -370,6 +372,161 @@ public function destroy($id)
         'message'=>'Ticket deleted successfully.'
     ]);
 }
+public function close($id)
+{
+    $user = Auth::user();
+    $user->load('role');
+
+    $ticket = Ticket::find($id);
+
+    if (!$ticket) {
+        return response()->json([
+            'message' => 'Ticket not found.'
+        ], 404);
+    }
+
+    if (
+        !$user->role ||
+        $user->role->role !== 'IT Support Agent' ||
+        $ticket->assignedto != $user->id
+    ) {
+        return response()->json([
+            'message' => 'Only the assigned IT Support Agent can close this ticket.'
+        ], 403);
+    }
+
+    $inProgressStatus = Status::where('status', 'In Progress')->first();
+    $closedStatus = Status::where('status', 'Closed')->first();
+
+    if (!$inProgressStatus || !$closedStatus) {
+        return response()->json([
+            'message' => 'Required ticket statuses were not found.'
+        ], 500);
+    }
+
+    if ($ticket->statusid != $inProgressStatus->id) {
+        return response()->json([
+            'message' => 'Only In Progress tickets can be closed.'
+        ], 409);
+    }
+
+    $ticket->statusid = $closedStatus->id;
+    $ticket->closed_date = now();
+    $ticket->update_date = now();
+    $ticket->save();
+
+    return response()->json([
+        'message' => 'Ticket closed successfully.',
+        'ticket' => $ticket->fresh([
+            'creator',
+            'assignedUser',
+            'priority',
+            'status',
+            'category'
+        ])
+    ]);
+}
+public function returnTicket($id)
+{
+    $user = Auth::user();
+    $user->load('role');
+
+    $ticket = Ticket::find($id);
+
+    if (!$ticket) {
+        return response()->json([
+            'message' => 'Ticket not found.'
+        ], 404);
+    }
+
+    if (
+        !$user->role ||
+        $user->role->role !== 'IT Support Agent' ||
+        $ticket->assignedto != $user->id
+    ) {
+        return response()->json([
+            'message' => 'Only the assigned IT Support Agent can return this ticket.'
+        ], 403);
+    }
+
+    $inProgressStatus = Status::where('status', 'In Progress')->first();
+    $returnedStatus = Status::where('status', 'Returned')->first();
+
+    if (!$inProgressStatus || !$returnedStatus) {
+        return response()->json([
+            'message' => 'Required ticket statuses were not found.'
+        ], 500);
+    }
+
+    if ($ticket->statusid != $inProgressStatus->id) {
+        return response()->json([
+            'message' => 'Only In Progress tickets can be returned.'
+        ], 409);
+    }
+
+    $lastAssignment = TicketHistory::where('ticketid', $ticket->id)
+        ->where('assignedto', $user->id)
+        ->whereHas('assignedBy', function ($query) {
+            $query->where('isbanned', false)
+                ->whereHas('role', function ($roleQuery) {
+                    $roleQuery->whereIn('role', ['Admin', 'Manager']);
+                });
+        })
+        ->orderByDesc('assigneddate')
+        ->orderByDesc('id')
+        ->first();
+
+    $returnTo = $lastAssignment
+        ? User::with('role')->find($lastAssignment->assignedby)
+        : null;
+
+    // Legacy and seeded tickets may predate assignment-history tracking.
+    if (!$returnTo) {
+        $returnTo = User::with('role')
+            ->where('isbanned', false)
+            ->whereHas('role', function ($query) {
+                $query->whereIn('role', ['Admin', 'Manager']);
+            })
+            ->get()
+            ->sortBy(function ($candidate) {
+                return $candidate->role->role === 'Admin' ? 0 : 1;
+            })
+            ->first();
+    }
+
+    if (!$returnTo) {
+        return response()->json([
+            'message' => 'No active administrator or manager is available to receive this ticket.'
+        ], 409);
+    }
+
+    DB::transaction(function () use ($ticket, $returnedStatus, $returnTo, $user) {
+        $ticket->assignedto = $returnTo->id;
+        $ticket->statusid = $returnedStatus->id;
+        $ticket->closed_date = null;
+        $ticket->update_date = now();
+        $ticket->save();
+
+        TicketHistory::create([
+            'ticketid' => $ticket->id,
+            'assignedby' => $user->id,
+            'assignedto' => $returnTo->id,
+            'assigneddate' => now(),
+            'reason' => 'Ticket returned by IT Support Agent.'
+        ]);
+    });
+
+    return response()->json([
+        'message' => 'Ticket returned successfully.',
+        'ticket' => $ticket->fresh([
+            'creator',
+            'assignedUser',
+            'priority',
+            'status',
+            'category'
+        ])
+    ]);
+}
 public function assign(Request $request, $id)
 {
     $user = Auth::user();
@@ -439,10 +596,22 @@ public function assign(Request $request, $id)
         $ticket->assignedto = $user->id;
     }
 
-    $ticket->statusid = $inProgressStatus->id;
-    $ticket->update_date = now();
-    $ticket->closed_date = null;
-    $ticket->save();
+    DB::transaction(function () use ($ticket, $inProgressStatus, $user, $role) {
+        $ticket->statusid = $inProgressStatus->id;
+        $ticket->update_date = now();
+        $ticket->closed_date = null;
+        $ticket->save();
+
+        TicketHistory::create([
+            'ticketid' => $ticket->id,
+            'assignedby' => $user->id,
+            'assignedto' => $ticket->assignedto,
+            'assigneddate' => now(),
+            'reason' => in_array($role, ['Admin', 'Manager'])
+                ? 'Ticket assigned to IT Support Agent.'
+                : 'Ticket claimed by IT Support Agent.'
+        ]);
+    });
 
     return response()->json([
         'message' => in_array($role, ['Admin', 'Manager'])
