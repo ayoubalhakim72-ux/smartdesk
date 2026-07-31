@@ -5,7 +5,8 @@ import {
     FaTrash,
     FaEye,
     FaUserPlus,
-    FaPlus
+    FaPlus,
+    FaSortAmountDown
 } from "react-icons/fa";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../services/api";
@@ -21,8 +22,8 @@ function Tickets() {
     const [search, setSearch] = useState("");
     const [categoryId, setCategoryId] = useState("");
     const [statusId, setStatusId] = useState("");
-    const [fromDate, setFromDate] = useState("");
-    const [toDate, setToDate] = useState("");
+    const [selectedDate, setSelectedDate] = useState("");
+    const [sortNewest, setSortNewest] = useState(false);
     const [ticketView, setTicketView] = useState("default");
 
     const storedUser = localStorage.getItem("user");
@@ -38,7 +39,7 @@ function Tickets() {
 
     useEffect(() => {
         loadTickets();
-    }, [ticketView, categoryId, statusId, fromDate, toDate]);
+    }, [ticketView, categoryId, statusId, selectedDate, sortNewest]);
 
     async function loadFilterOptions() {
         try {
@@ -67,8 +68,8 @@ function Tickets() {
                             : undefined,
                     categoryid: categoryId || undefined,
                     statusid: statusId || undefined,
-                    from: fromDate || undefined,
-                    to: toDate || undefined
+                    date: selectedDate || undefined,
+                    sort: sortNewest ? "newest" : undefined
                 }
             });
 
@@ -117,8 +118,7 @@ function Tickets() {
     function clearFilters() {
         setCategoryId("");
         setStatusId("");
-        setFromDate("");
-        setToDate("");
+        setSelectedDate("");
     }
 
     const canEditTicket = (ticket) =>
@@ -126,7 +126,7 @@ function Tickets() {
         role === "IT Support Agent" ||
         (role === "Employee" && ticket.assignedto === null);
 
-    const hasActiveFilters = categoryId || statusId || fromDate || toDate;
+    const hasActiveFilters = categoryId || statusId || selectedDate;
 
     const filteredTickets = tickets.filter((ticket) =>
         ticket.title.toLowerCase().includes(search.toLowerCase())
@@ -198,24 +198,22 @@ function Tickets() {
                 </select>
 
                 <label className="date-filter">
-                    <span>From</span>
+                    <span>Date</span>
                     <input
                         type="date"
-                        value={fromDate}
-                        max={toDate || undefined}
-                        onChange={(event) => setFromDate(event.target.value)}
+                        value={selectedDate}
+                        onChange={(event) => setSelectedDate(event.target.value)}
                     />
                 </label>
 
-                <label className="date-filter">
-                    <span>To</span>
-                    <input
-                        type="date"
-                        value={toDate}
-                        min={fromDate || undefined}
-                        onChange={(event) => setToDate(event.target.value)}
-                    />
-                </label>
+                <button
+                    type="button"
+                    className={`sort-newest-btn ${sortNewest ? "active" : ""}`}
+                    onClick={() => setSortNewest((current) => !current)}
+                    aria-pressed={sortNewest}
+                >
+                    <FaSortAmountDown /> Newest to Oldest
+                </button>
 
                 {hasActiveFilters && (
                     <button
