@@ -554,8 +554,17 @@ public function assign(Request $request, $id)
         ], 404);
     }
 
-    // Only unassigned tickets can be claimed or assigned
-    if ($ticket->assignedto !== null) {
+    $returnedStatus = Status::where('status', 'Returned')->first();
+
+    // Admins and managers can reassign a Returned ticket only when it was
+    // returned to their own queue. IT agents can still claim only unassigned tickets.
+    $canReassignReturnedTicket =
+        in_array($role, ['Admin', 'Manager']) &&
+        $returnedStatus &&
+        $ticket->assignedto == $user->id &&
+        $ticket->statusid == $returnedStatus->id;
+
+    if ($ticket->assignedto !== null && !$canReassignReturnedTicket) {
         return response()->json([
             'message' => 'This ticket is already assigned.'
         ], 409);
