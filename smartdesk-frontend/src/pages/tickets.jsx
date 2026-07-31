@@ -293,8 +293,8 @@ function Tickets() {
                                                         ? "open"
                                                         : ticket.status.status === "In Progress"
                                                         ? "progress"
-                                                        : ticket.status.status === "Resolved"
-                                                        ? "resolved"
+                                                        : ticket.status.status === "Returned"
+                                                        ? "returned"
                                                         : "closed"
                                                 }`}
                                             >

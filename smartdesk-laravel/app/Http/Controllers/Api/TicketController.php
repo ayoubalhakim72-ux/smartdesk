@@ -404,6 +404,14 @@ public function assign(Request $request, $id)
         ], 409);
     }
 
+    $inProgressStatus = Status::where('status', 'In Progress')->first();
+
+    if (!$inProgressStatus) {
+        return response()->json([
+            'message' => 'In Progress status not found.'
+        ], 500);
+    }
+
     if (in_array($role, ['Admin', 'Manager'])) {
         $request->validate([
             'assignedto' => [
@@ -431,7 +439,9 @@ public function assign(Request $request, $id)
         $ticket->assignedto = $user->id;
     }
 
+    $ticket->statusid = $inProgressStatus->id;
     $ticket->update_date = now();
+    $ticket->closed_date = null;
     $ticket->save();
 
     return response()->json([
@@ -449,4 +459,3 @@ public function assign(Request $request, $id)
     ], 200);
 }
 }
-

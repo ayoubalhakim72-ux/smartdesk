@@ -71,7 +71,7 @@ function TicketDetails() {
     function getStatusClass(status) {
         if (status === "Open") return "open";
         if (status === "In Progress") return "progress";
-        if (status === "Resolved") return "resolved";
+        if (status === "Returned") return "returned";
 
         return "closed";
     }

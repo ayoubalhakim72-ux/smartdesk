@@ -3,13 +3,23 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\Status;
 use App\Models\Ticket;
 
 class TicketSeeder extends Seeder
 {
     public function run(): void
     {
-        Ticket::insert([
+        $openStatusId = Status::where('status', 'Open')->value('id');
+        $inProgressStatusId = Status::where('status', 'In Progress')->value('id');
+
+        if (!$openStatusId || !$inProgressStatusId) {
+            throw new \RuntimeException(
+                'Open and In Progress statuses must be seeded before tickets.'
+            );
+        }
+
+        $tickets = [
 
             [
                 'priorityid'=>3,
@@ -271,6 +281,25 @@ class TicketSeeder extends Seeder
                 'description'=>'Create an account for a new employee.'
             ]
 
-        ]);
+        ];
+
+        foreach ($tickets as &$ticket) {
+            $isAssigned = $ticket['assignedto'] !== null;
+
+            $ticket['statusid'] = $isAssigned
+                ? $inProgressStatusId
+                : $openStatusId;
+            $ticket['update_date'] = $isAssigned ? now() : null;
+            $ticket['closed_date'] = null;
+        }
+
+        unset($ticket);
+
+        foreach ($tickets as $ticketData) {
+            Ticket::updateOrCreate(
+                ['title' => $ticketData['title']],
+                $ticketData
+            );
+        }
     }
 }
