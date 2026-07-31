@@ -281,15 +281,22 @@ function Tickets() {
                                         <td>{ticket.creator.firstname}</td>
                                         <td>
                                             <div className="actions">
-                                                <button
-                                                    className="action-btn view"
-                                                    title="View"
-                                                    onClick={() =>
-                                                        navigate(`/tickets/${ticket.id}`)
-                                                    }
-                                                >
-                                                    <FaEye />
-                                                </button>
+                                                {!(
+                                                    role === "IT Support Agent" &&
+                                                    ticket.assignedto === null
+                                                ) && (
+                                                    <button
+                                                        className="action-btn view"
+                                                        title="View"
+                                                        onClick={() =>
+                                                            navigate(
+                                                                `/tickets/${ticket.id}`
+                                                            )
+                                                        }
+                                                    >
+                                                        <FaEye />
+                                                    </button>
+                                                )}
 
                                                 {canEditTicket(ticket) && (
                                                     <button
