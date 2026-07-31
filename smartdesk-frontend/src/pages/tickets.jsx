@@ -107,6 +107,11 @@ const role =
     }
     }
 
+    const canEditTicket = (ticket) =>
+        role === "Admin" ||
+        role === "IT Support Agent" ||
+        (role === "Employee" && ticket.assignedto === null);
+
     const filteredTickets = tickets.filter(ticket =>
         ticket.title.toLowerCase().includes(search.toLowerCase())
     );
@@ -271,6 +276,7 @@ const role =
 
                                         </button>
 
+                                        {canEditTicket(ticket) && (
                                         <button
                                             className="action-btn edit"
                                             title="Edit"
@@ -282,6 +288,7 @@ const role =
                                             <FaEdit />
 
                                         </button>
+                                        )}
                                         {(role === "Admin") &&(
                                         <button
                                             className="action-btn delete"
