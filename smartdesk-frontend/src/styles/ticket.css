@@ -236,3 +236,75 @@
     background: #2563eb;
     color: white;
 }
+
+.assignment-subtitle {
+    margin: 6px 0 0;
+    color: #64748b;
+}
+
+.assignment-back-btn,
+.assign-agent-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    border-radius: 9px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.assignment-back-btn {
+    padding: 11px 17px;
+    background: #64748b;
+}
+
+.assignment-back-btn:hover {
+    background: #475569;
+}
+
+.assign-agent-btn {
+    min-width: 112px;
+    padding: 10px 16px;
+    background: #22c55e;
+}
+
+.assign-agent-btn:hover:not(:disabled) {
+    background: #16a34a;
+}
+
+.assign-agent-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.assignment-error {
+    margin-bottom: 20px;
+    padding: 13px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.assignment-loading {
+    color: #475569;
+}
+
+.assignment-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 15px;
+}
+
+.assignment-empty {
+    text-align: center !important;
+    color: #64748b;
+}
+
+.agent-name {
+    font-weight: 600;
+    color: #0f172a;
+}
