@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     FaHome,
     FaTicketAlt,
@@ -9,16 +10,41 @@ import {
     FaSignOutAlt
 } from "react-icons/fa";
 
+import api from "../services/api";
 import "../styles/sidebar.css";
 
 
 function Sidebar() {
 
     const location = useLocation();
+    const navigate = useNavigate();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const user = JSON.parse(localStorage.getItem("user"));
 
     const role = user?.role;
+
+    const handleLogout = async () => {
+
+        if (isLoggingOut) {
+            return;
+        }
+
+        setIsLoggingOut(true);
+
+        try {
+            await api.post("/logout");
+        }
+        catch (error) {
+            console.error("Logout request failed:", error);
+        }
+        finally {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navigate("/", { replace: true });
+        }
+
+    };
 
     return (
 
@@ -116,11 +142,16 @@ function Sidebar() {
 
             </ul>
 
-            <button className="logout-button">
+            <button
+                type="button"
+                className="logout-button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+            >
 
                 <FaSignOutAlt />
 
-                Logout
+                {isLoggingOut ? "Logging out..." : "Logout"}
 
             </button>
 
