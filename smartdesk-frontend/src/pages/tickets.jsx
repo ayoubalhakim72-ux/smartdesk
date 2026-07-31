@@ -65,6 +65,8 @@ function Tickets() {
                     assigned:
                         ticketView === "unassigned"
                             ? "unassigned"
+                            : ticketView === "returned"
+                            ? "returned"
                             : undefined,
                     categoryid: categoryId || undefined,
                     statusid: statusId || undefined,
@@ -147,23 +149,43 @@ function Tickets() {
             </div>
 
             <div className="filters">
-                {(role === "Admin" || role === "IT Support Agent") && (
+                {(role === "Admin" ||
+                    role === "Manager" ||
+                    role === "IT Support Agent") && (
                     <div className="ticket-toggle">
                         <button
                             type="button"
                             className={ticketView === "default" ? "active" : ""}
                             onClick={() => setTicketView("default")}
                         >
-                            {role === "Admin" ? "All Tickets" : "My Tickets"}
+                            {role === "IT Support Agent"
+                                ? "My Tickets"
+                                : "All Tickets"}
                         </button>
 
-                        <button
-                            type="button"
-                            className={ticketView === "unassigned" ? "active" : ""}
-                            onClick={() => setTicketView("unassigned")}
-                        >
-                            Unassigned
-                        </button>
+                        {role !== "Manager" && (
+                            <button
+                                type="button"
+                                className={
+                                    ticketView === "unassigned" ? "active" : ""
+                                }
+                                onClick={() => setTicketView("unassigned")}
+                            >
+                                Unassigned
+                            </button>
+                        )}
+
+                        {(role === "Admin" || role === "Manager") && (
+                            <button
+                                type="button"
+                                className={
+                                    ticketView === "returned" ? "active" : ""
+                                }
+                                onClick={() => setTicketView("returned")}
+                            >
+                                Returned Tickets
+                            </button>
+                        )}
                     </div>
                 )}
 
