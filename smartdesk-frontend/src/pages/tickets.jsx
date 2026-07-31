@@ -140,12 +140,14 @@ function Tickets() {
             <div className="page-header">
                 <h1>Tickets</h1>
 
-                <button
-                    className="create-btn"
-                    onClick={() => navigate("/create-ticket")}
-                >
-                    <FaPlus /> Create Ticket
-                </button>
+                {(role === "Admin" || role === "Employee") && (
+                    <button
+                        className="create-btn"
+                        onClick={() => navigate("/create-ticket")}
+                    >
+                        <FaPlus /> Create Ticket
+                    </button>
+                )}
             </div>
 
             <div className="filters">
