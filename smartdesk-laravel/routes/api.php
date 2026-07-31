@@ -27,6 +27,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tickets/{id}', [TicketController::class, 'update']);
     Route::delete('/tickets/{id}', [TicketController::class, 'destroy']);
     Route::put('/tickets/{id}/assign', [TicketController::class, 'assign']);
+    Route::put('/tickets/{id}/close', [TicketController::class, 'close']);
+    Route::put('/tickets/{id}/return', [TicketController::class, 'returnTicket']);
 
     // Ticket form and filter options
     Route::get('/priorities', [PriorityController::class, 'index']);
