@@ -86,9 +86,8 @@ class TicketCommentController extends Controller
         $comment->load('user.role');
 
         return response()->json([
-            'message' => empty($comment->parentid)
-                ? 'Comment sent successfully.'
-                : 'Reply sent successfully.',
+            // Replies are comments too; parentid only links a comment to its parent.
+            'message' => 'Comment sent successfully.',
             'comment' => $this->formatComment($comment)
         ], 201);
     }
