@@ -61,12 +61,17 @@ class TicketController extends Controller
     switch ($user->role->role) {
 
         case 'Admin':
-              if (request('assigned') === 'unassigned') {
-            $query->whereNull('assignedto');
-        }
+            if (request('assigned') === 'unassigned') {
+                $query->whereNull('assignedto');
+            } elseif (request('assigned') === 'returned') {
+                $query->where('assignedto', $user->id);
+            }
+            break;
 
-        break;
         case 'Manager':
+            if (request('assigned') === 'returned') {
+                $query->where('assignedto', $user->id);
+            }
             break;
 
         case 'Employee':
