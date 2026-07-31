@@ -346,7 +346,12 @@ function Tickets() {
                                                 {(role === "Admin" ||
                                                     role === "Manager" ||
                                                     role === "IT Support Agent") &&
-                                                    ticket.assignedto === null && (
+                                                    (ticket.assignedto === null ||
+                                                        ((role === "Admin" ||
+                                                            role === "Manager") &&
+                                                            ticketView === "returned" &&
+                                                            ticket.status.status ===
+                                                                "Returned")) && (
                                                         <button
                                                             className="action-btn assign"
                                                             title="Assign"
