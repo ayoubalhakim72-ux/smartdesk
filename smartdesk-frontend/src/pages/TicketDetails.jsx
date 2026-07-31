@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaArrowLeft, FaComments, FaHistory } from "react-icons/fa";
+import {
+    FaArrowLeft,
+    FaCheckCircle,
+    FaComments,
+    FaHistory,
+    FaUndo
+} from "react-icons/fa";
 import DashboardLayout from "../layouts/DashboardLayout";
 import api from "../services/api";
 import "../styles/ticket.css";
@@ -12,6 +18,14 @@ function TicketDetails() {
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [ticketAction, setTicketAction] = useState("");
+
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const role =
+        typeof user?.role === "string"
+            ? user.role
+            : user?.role?.role || user?.role_name || user?.rolename;
 
     useEffect(() => {
         let isActive = true;
@@ -75,6 +89,35 @@ function TicketDetails() {
 
         return "closed";
     }
+
+    async function updateTicketState(action) {
+        const actionLabel = action === "close" ? "close" : "return";
+        const confirmed = window.confirm(
+            `Are you sure you want to ${actionLabel} this ticket?`
+        );
+
+        if (!confirmed) return;
+
+        setTicketAction(action);
+
+        try {
+            const response = await api.put(`/tickets/${id}/${action}`);
+            alert(response.data.message);
+            navigate("/tickets");
+        } catch (requestError) {
+            alert(
+                requestError.response?.data?.message ||
+                `Failed to ${actionLabel} ticket.`
+            );
+        } finally {
+            setTicketAction("");
+        }
+    }
+
+    const canCompleteTicket =
+        role === "IT Support Agent" &&
+        Number(ticket?.assignedto) === Number(user?.id) &&
+        ticket?.status?.status === "In Progress";
 
     return (
         <DashboardLayout>
@@ -218,6 +261,34 @@ function TicketDetails() {
                     </div>
 
                     <div className="ticket-details-actions">
+                        {canCompleteTicket && (
+                            <>
+                                <button
+                                    type="button"
+                                    className="ticket-page-btn close-ticket"
+                                    onClick={() => updateTicketState("close")}
+                                    disabled={ticketAction !== ""}
+                                >
+                                    <FaCheckCircle />
+                                    {ticketAction === "close"
+                                        ? "Closing..."
+                                        : "Close Ticket"}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="ticket-page-btn return-ticket"
+                                    onClick={() => updateTicketState("return")}
+                                    disabled={ticketAction !== ""}
+                                >
+                                    <FaUndo />
+                                    {ticketAction === "return"
+                                        ? "Returning..."
+                                        : "Return Ticket"}
+                                </button>
+                            </>
+                        )}
+
                         <button
                             type="button"
                             className="ticket-page-btn comments"
