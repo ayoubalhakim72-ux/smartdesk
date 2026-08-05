@@ -14,9 +14,12 @@ function TicketForm({ mode }) {
             ? user.role
             : user?.role?.role || user?.role_name || user?.rolename;
 
-    const isLimitedEditor =
-        mode === "edit" &&
-        (role === "Manager" || role === "IT Support Agent");
+    const isManagerEditor =
+        mode === "edit" && role === "Manager";
+    const isAgentEditor =
+        mode === "edit" && role === "IT Support Agent";
+    const isRestrictedEditor =
+        isManagerEditor || isAgentEditor;
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -83,10 +86,15 @@ function TicketForm({ mode }) {
         setLoading(true);
 
         try {
-            const data = isLimitedEditor
+            const data = isManagerEditor
                 ? {
                     categoryid,
                     statusid
+                }
+                : isAgentEditor
+                ? {
+                    categoryid,
+                    priorityid
                 }
                 : {
                     title,
@@ -124,9 +132,11 @@ function TicketForm({ mode }) {
                     : "Edit Ticket"}
             </h1>
 
-            {isLimitedEditor && (
+            {isRestrictedEditor && (
                 <p>
-                    You can update only the ticket status and category.
+                    {isAgentEditor
+                        ? "You can update only the ticket priority and category."
+                        : "You can update only the ticket status and category."}
                 </p>
             )}
 
@@ -137,8 +147,8 @@ function TicketForm({ mode }) {
                     type="text"
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
-                    disabled={isLimitedEditor}
-                    required={!isLimitedEditor}
+                    disabled={isRestrictedEditor}
+                    required={!isRestrictedEditor}
                 />
             </div>
 
@@ -149,8 +159,8 @@ function TicketForm({ mode }) {
                     rows="6"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
-                    disabled={isLimitedEditor}
-                    required={!isLimitedEditor}
+                    disabled={isRestrictedEditor}
+                    required={!isRestrictedEditor}
                 />
             </div>
 
@@ -176,7 +186,7 @@ function TicketForm({ mode }) {
                     </select>
                 </div>
 
-                {isLimitedEditor ? (
+                {isManagerEditor ? (
                     <div className="form-group">
                         <label>Status</label>
 
