@@ -170,7 +170,7 @@ function Dashboard() {
                   <FaHistory />
                   <h2>All Ticket Activity</h2>
                 </div>
-                <p>Chronological order, accurate to the second</p>
+                <p>Newest activity first, accurate to the second</p>
               </div>
 
               <span className="dashboard-activity-count">
