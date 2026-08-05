@@ -4,11 +4,9 @@ function StatisticCard({ title, value, icon, color }) {
 
     return (
 
-        <div className="stat-card">
+        <div className="stat-card" style={{ "--stat-accent": color }}>
 
-            <div className="icon-area"
-                style={{background:color}}
-            >
+            <div className="icon-area">
 
                 {icon}
 

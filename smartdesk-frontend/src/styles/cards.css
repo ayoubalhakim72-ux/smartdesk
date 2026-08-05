@@ -1,71 +1,70 @@
-.cards-container{
-
-    display:grid;
-
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-
-    gap:25px;
-
+.stat-card {
+  position: relative;
+  display: flex;
+  min-height: 134px;
+  align-items: center;
+  gap: 17px;
+  overflow: hidden;
+  padding: 23px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.018), transparent 65%),
+    var(--surface);
+  box-shadow: var(--shadow-soft);
+  transition: 170ms ease;
 }
 
-.stat-card{
-
-    background:white;
-
-    border-radius:18px;
-
-    padding:25px;
-
-    display:flex;
-
-    align-items:center;
-
-    gap:20px;
-
-    box-shadow:0 12px 30px rgba(0,0,0,.08);
-
-    transition:.3s;
-
+.stat-card::after {
+  position: absolute;
+  right: -25px;
+  bottom: -55px;
+  width: 125px;
+  height: 125px;
+  border-radius: 50%;
+  background: var(--stat-accent);
+  content: "";
+  filter: blur(55px);
+  opacity: 0.12;
 }
 
-.stat-card:hover{
-
-    transform:translateY(-6px);
-
+.stat-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
 }
 
-.icon-area{
-
-    width:70px;
-
-    height:70px;
-
-    border-radius:18px;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    color:white;
-
-    font-size:30px;
-
+.icon-area {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--stat-accent) 35%, transparent);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--stat-accent) 14%, transparent);
+  color: var(--stat-accent);
+  font-size: 21px;
 }
 
-.stat-card p{
-
-    color:#64748b;
-
-    font-size:15px;
-
+.stat-card > div:last-child {
+  position: relative;
+  z-index: 1;
 }
 
-.stat-card h2{
+.stat-card p {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 680;
+  letter-spacing: 0.02em;
+}
 
-    font-size:34px;
-
-    margin-top:8px;
-
+.stat-card h2 {
+  margin-top: 6px;
+  color: var(--foreground);
+  font-size: 30px;
+  font-weight: 760;
+  letter-spacing: -0.04em;
 }

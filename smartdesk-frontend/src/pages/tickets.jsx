@@ -140,7 +140,11 @@ function Tickets() {
     return (
         <DashboardLayout>
             <div className="page-header">
-                <h1>Tickets</h1>
+                <div>
+                    <span className="page-eyebrow">Support workspace</span>
+                    <h1>Tickets</h1>
+                    <p>Review, filter, and manage service requests.</p>
+                </div>
 
                 {(role === "Admin" || role === "Employee") && (
                     <button

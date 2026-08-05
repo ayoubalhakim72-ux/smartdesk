@@ -1,37 +1,18 @@
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/sidebar";
+import Navbar from "../components/navbar";
+import "../styles/dashboardLayout.css";
 
 function DashboardLayout({ children }) {
-
     return (
-
-        <div style={{ display: "flex" }}>
-
+        <div className="dashboard-shell">
             <Sidebar />
 
-            <div
-                style={{
-                    marginLeft: "260px",
-                    width: "100%",
-                    background: "#F1F5F9",
-                    minHeight: "100vh"
-                }}
-            >
-
+            <div className="dashboard-main">
                 <Navbar />
-
-                <div style={{ padding: "35px" }}>
-
-                    {children}
-
-                </div>
-
+                <main className="dashboard-content">{children}</main>
             </div>
-
         </div>
-
     );
-
 }
 
 export default DashboardLayout;

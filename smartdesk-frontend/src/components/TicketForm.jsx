@@ -126,14 +126,24 @@ function TicketForm({ mode }) {
 
     return (
         <form className="ticket-form" onSubmit={handleSubmit}>
-            <h1>
-                {mode === "create"
-                    ? "Create Ticket"
-                    : "Edit Ticket"}
-            </h1>
+            <div className="ticket-form-heading">
+                <span className="form-eyebrow">
+                    {mode === "create" ? "New request" : `Ticket #${id}`}
+                </span>
+                <h1>
+                    {mode === "create"
+                        ? "Create a support ticket"
+                        : "Edit ticket details"}
+                </h1>
+                <p>
+                    {mode === "create"
+                        ? "Describe the issue clearly so the support team can help faster."
+                        : "Review the request and update the fields available to your role."}
+                </p>
+            </div>
 
             {isRestrictedEditor && (
-                <p>
+                <p className="form-permission-note">
                     {isAgentEditor
                         ? "You can update only the ticket priority and category."
                         : "You can update only the ticket status and category."}
@@ -231,17 +241,26 @@ function TicketForm({ mode }) {
                 )}
             </div>
 
-            <button
-                type="submit"
-                className="submit-btn"
-                disabled={loading}
-            >
-                {loading
-                    ? "Saving..."
-                    : mode === "create"
-                    ? "Create Ticket"
-                    : "Update Ticket"}
-            </button>
+            <div className="ticket-form-actions">
+                <button
+                    type="button"
+                    className="form-cancel-btn"
+                    onClick={() => navigate("/tickets")}
+                >
+                    Cancel
+                </button>
+                <button
+                    type="submit"
+                    className="submit-btn"
+                    disabled={loading}
+                >
+                    {loading
+                        ? "Saving..."
+                        : mode === "create"
+                        ? "Create Ticket"
+                        : "Save Changes"}
+                </button>
+            </div>
         </form>
     );
 }

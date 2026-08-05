@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import {
+    FaCheckCircle,
+    FaClock,
+    FaEye,
+    FaEyeSlash,
+    FaLock,
+    FaShieldAlt,
+    FaUser
+} from "react-icons/fa";
 import api from "../services/api";
 import "../styles/login.css";
 
@@ -16,7 +24,9 @@ const [password, setPassword] = useState("");
 const [loading, setLoading] = useState(false);
 
 const [error, setError] = useState("");
-const handleLogin = async () => {
+const handleLogin = async (event) => {
+
+    event?.preventDefault();
 
     setLoading(true);
 
@@ -67,85 +77,91 @@ const handleLogin = async () => {
     return (
 
         <div className="login-container">
+            <div className="login-orb login-orb-one" />
+            <div className="login-orb login-orb-two" />
 
-            <div className="background-circle circle1"></div>
-            <div className="background-circle circle2"></div>
-
-            <div className="login-card">
-
-                <div className="logo">
-
-                    <div className="logo-icon">
-                        SD
+            <main className="login-shell">
+                <section className="login-intro">
+                    <div className="login-brand">
+                        <span className="login-brand-mark">SD</span>
+                        <div>
+                            <strong>SmartDesk</strong>
+                            <small>IT service workspace</small>
+                        </div>
                     </div>
 
-                    <h1>SmartDesk</h1>
+                    <div className="login-intro-copy">
+                        <span className="login-eyebrow">Support, simplified</span>
+                        <h1>Resolve work faster with one clear service desk.</h1>
+                        <p>
+                            Keep requests, conversations, assignments, and activity
+                            organized in a secure shared workspace.
+                        </p>
+                    </div>
 
-                    <p>IT Ticket Management System</p>
+                    <div className="login-benefits">
+                        <span><FaCheckCircle /> Clear ticket ownership</span>
+                        <span><FaClock /> Complete activity history</span>
+                        <span><FaShieldAlt /> Role-based access</span>
+                    </div>
+                </section>
 
-                </div>
+                <section className="login-form-panel">
+                    <div className="login-form-heading">
+                        <span className="login-form-kicker">Welcome back</span>
+                        <h2>Sign in to your account</h2>
+                        <p>Use your SmartDesk credentials to continue.</p>
+                    </div>
 
-                <div className="input-group">
+                    <form className="login-form" onSubmit={handleLogin}>
+                        <label>
+                            <span>Email address</span>
+                            <div className="login-input-wrap">
+                                <FaUser />
+                                <input
+                                    type="email"
+                                    placeholder="name@company.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    autoComplete="email"
+                                    required
+                                />
+                            </div>
+                        </label>
 
-                    <FaUser className="icon"/>
+                        <label>
+                            <span>Password</span>
+                            <div className="login-input-wrap">
+                                <FaLock />
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    autoComplete="current-password"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    className="password-toggle"
+                                    onClick={() => setShowPassword((current) => !current)}
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                </button>
+                            </div>
+                        </label>
 
-                   <input
-    type="email"
-    placeholder="Email"
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-/>
+                        {error && <div className="login-error">{error}</div>}
 
-                </div>
+                        <button className="login-submit" type="submit" disabled={loading}>
+                            {loading ? "Signing in..." : "Sign in"}
+                        </button>
+                    </form>
 
-                <div className="input-group">
-
-                    <FaLock className="icon"/>
-
-                   <input
-    type={showPassword ? "text" : "password"}
-    placeholder="Password"
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-/>
-
-                    {
-                        showPassword ?
-
-                        <FaEyeSlash
-                            className="eye"
-                            onClick={() => setShowPassword(false)}
-                        />
-
-                        :
-
-                        <FaEye
-                            className="eye"
-                            onClick={() => setShowPassword(true)}
-                        />
-                    }
-
-                </div>
-                    {
-    error &&
-
-    <p className="error">
-
-        {error}
-
-    </p>
-
-}
-                <button
-    onClick={handleLogin}
->
-
-    {loading ? "Logging in..." : "Login"}
-
-</button>
-
-            </div>
-
+                    <p className="login-help">Protected access for authorized SmartDesk users.</p>
+                </section>
+            </main>
         </div>
 
     );

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
     FaHome,
     FaTicketAlt,
@@ -15,14 +15,17 @@ import "../styles/sidebar.css";
 
 
 function Sidebar() {
-
-    const location = useLocation();
     const navigate = useNavigate();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const user = JSON.parse(localStorage.getItem("user"));
 
-    const role = user?.role;
+    const role =
+        typeof user?.role === "string"
+            ? user.role
+            : user?.role?.role || user?.role_name || user?.rolename;
+
+    const navClassName = ({ isActive }) => (isActive ? "active" : "");
 
     const handleLogout = async () => {
 
@@ -48,99 +51,100 @@ function Sidebar() {
 
     return (
 
-        <div className="sidebar">
+        <aside className="sidebar">
+            <Link className="sidebar-brand" to="/dashboard">
+                <span className="sidebar-brand-mark">SD</span>
+                <span className="sidebar-brand-copy">
+                    <strong>SmartDesk</strong>
+                    <small>Service workspace</small>
+                </span>
+            </Link>
 
-            <div className="logo">
-
-                <h2>SmartDesk</h2>
-
-                <p>Ticket System</p>
-
-            </div>
-
-            <ul>
-
-                <li className={location.pathname === "/dashboard" ? "active" : ""}>
-                    <Link to="/dashboard">
+            <nav className="sidebar-navigation" aria-label="Main navigation">
+                <span className="sidebar-section-label">Workspace</span>
+                <ul>
+                <li>
+                    <NavLink to="/dashboard" className={navClassName}>
                         <FaHome />
-                        Dashboard
-                    </Link>
+                        <span>Dashboard</span>
+                    </NavLink>
                 </li>
 
                 {(role === "Admin" || role === "Manager") && (
 
-                    <li className={location.pathname === "/tickets" ? "active" : ""}>
-                        <Link to="/tickets">
+                    <li>
+                        <NavLink to="/tickets" className={navClassName}>
                             <FaTicketAlt />
-                            Tickets
-                        </Link>
+                            <span>Tickets</span>
+                        </NavLink>
                     </li>
 
                 )}
 
                 {role === "Employee" && (
 
-                    <li className={location.pathname === "/tickets" ? "active" : ""}>
-                        <Link to="/tickets">
+                    <li>
+                        <NavLink to="/tickets" className={navClassName}>
                             <FaTicketAlt />
-                            My Tickets
-                        </Link>
+                            <span>My Tickets</span>
+                        </NavLink>
                     </li>
 
                 )}
 
                 {role === "IT Support Agent" && (
 
-                    <li className={location.pathname === "/tickets" ? "active" : ""}>
-                        <Link to="/tickets">
+                    <li>
+                        <NavLink to="/tickets" className={navClassName}>
                             <FaTicketAlt />
-                            Assigned Tickets
-                        </Link>
+                            <span>Assigned Tickets</span>
+                        </NavLink>
                     </li>
 
                 )}
 
                 {(role === "Admin" || role === "Employee") && (
 
-                    <li className={location.pathname === "/create-ticket" ? "active" : ""}>
-                        <Link to="/create-ticket">
+                    <li>
+                        <NavLink to="/create-ticket" className={navClassName}>
                             <FaPlusCircle />
-                            Create Ticket
-                        </Link>
+                            <span>Create Ticket</span>
+                        </NavLink>
                     </li>
 
                 )}
 
                 {role === "Admin" && (
 
-                    <li className={location.pathname === "/users" ? "active" : ""}>
-                        <Link to="/users">
+                    <li>
+                        <NavLink to="/users" className={navClassName}>
                             <FaUsers />
-                            Users
-                        </Link>
+                            <span>Users</span>
+                        </NavLink>
                     </li>
 
                 )}
 
                 {(role === "Admin" || role === "Manager") && (
 
-                    <li className={location.pathname === "/reports" ? "active" : ""}>
-                        <Link to="/reports">
+                    <li>
+                        <NavLink to="/reports" className={navClassName}>
                             <FaChartBar />
-                            Reports
-                        </Link>
+                            <span>Reports</span>
+                        </NavLink>
                     </li>
 
                 )}
 
-                <li className={location.pathname === "/profile" ? "active" : ""}>
-                    <Link to="/profile">
+                <li>
+                    <NavLink to="/profile" className={navClassName}>
                         <FaUser />
-                        Profile
-                    </Link>
+                        <span>Profile</span>
+                    </NavLink>
                 </li>
 
-            </ul>
+                </ul>
+            </nav>
 
             <button
                 type="button"
@@ -150,12 +154,11 @@ function Sidebar() {
             >
 
                 <FaSignOutAlt />
-
-                {isLoggingOut ? "Logging out..." : "Logout"}
+                <span>{isLoggingOut ? "Logging out..." : "Sign out"}</span>
 
             </button>
 
-        </div>
+        </aside>
 
     );
 

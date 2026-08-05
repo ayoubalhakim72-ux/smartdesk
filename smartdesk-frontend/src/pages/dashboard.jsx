@@ -122,15 +122,15 @@ function Dashboard() {
   return (
     <DashboardLayout>
       <div className="dashboard-page">
-        <h1 className="page-title">
-          Welcome Back, {user.firstname || user.name || "User"}
-        </h1>
-
-        <p className="page-subtitle">
-          Manage your support tickets efficiently.
-        </p>
-
-        <p>Here&apos;s what&apos;s happening today.</p>
+        <div className="dashboard-intro">
+          <span className="page-eyebrow">Service overview</span>
+          <h1 className="page-title">
+            Welcome back, {user.firstname || user.name || "User"}
+          </h1>
+          <p className="page-subtitle">
+            Here&apos;s the latest picture of your support workspace.
+          </p>
+        </div>
 
         <div className="dashboard-cards">
           <StatisticCard
