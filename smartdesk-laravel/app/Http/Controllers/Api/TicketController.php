@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketRequest;
 use App\Models\Ticket;
 use App\Models\TicketHistory;
+use App\Models\ActivityLog;
+use App\Models\TicketComment;
 use App\Models\User;
 use App\Models\Status;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\UpdateTicketRequest;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class TicketController extends Controller
 {
@@ -240,6 +243,8 @@ public function update(UpdateTicketRequest $request, $id)
         ],404);
     }
 
+    $before = $this->ticketSnapshot($ticket);
+
     switch ($user->role->role) {
 
         case 'Admin':
@@ -332,6 +337,8 @@ public function update(UpdateTicketRequest $request, $id)
 
     }
 
+    $this->recordTicketChanges($ticket, $before, $user);
+
     return response()->json([
         'message'=>'Ticket updated successfully.',
         'ticket'=>$ticket->fresh([
@@ -410,10 +417,19 @@ public function close($id)
         ], 409);
     }
 
-    $ticket->statusid = $closedStatus->id;
-    $ticket->closed_date = now();
-    $ticket->update_date = now();
-    $ticket->save();
+    DB::transaction(function () use ($ticket, $closedStatus, $user) {
+        $ticket->statusid = $closedStatus->id;
+        $ticket->closed_date = now();
+        $ticket->update_date = now();
+        $ticket->save();
+
+        ActivityLog::create([
+            'ticketid' => $ticket->id,
+            'user_id' => $user->id,
+            'action' => 'Closed the ticket.',
+            'date' => now()
+        ]);
+    });
 
     return response()->json([
         'message' => 'Ticket closed successfully.',
@@ -636,4 +652,274 @@ public function assign(Request $request, $id)
         ])
     ], 200);
 }
+
+    /**
+     * Return every recorded action for one ticket in newest-first order.
+     */
+    public function activity(Request $request, $id)
+    {
+        $ticket = Ticket::with([
+            'creator.role',
+            'assignedUser.role'
+        ])->find($id);
+
+        if (!$ticket) {
+            return response()->json([
+                'message' => 'Ticket not found.'
+            ], 404);
+        }
+
+        if (!$this->canViewTicketActivity($request->user(), $ticket)) {
+            return response()->json([
+                'message' => 'Unauthorized.'
+            ], 403);
+        }
+
+        $activities = collect([
+            [
+                'id' => 'ticket-created',
+                'type' => 'created',
+                'action' => 'Created the ticket.',
+                'details' => $ticket->title,
+                'date' => $this->activityDate($ticket->creation_date),
+                'user' => $this->formatActivityUser($ticket->creator)
+            ]
+        ]);
+
+        $logs = ActivityLog::with('user.role')
+            ->where('ticketid', $ticket->id)
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($logs as $log) {
+            $action = strtolower($log->action);
+
+            $type = str_contains($action, 'closed')
+                ? 'closed'
+                : (str_contains($action, 'returned')
+                    ? 'returned'
+                    : 'updated');
+
+            $activities->push([
+                'id' => 'log-' . $log->id,
+                'type' => $type,
+                'action' => $log->action,
+                'details' => null,
+                'date' => $this->activityDate($log->date),
+                'user' => $this->formatActivityUser($log->user)
+            ]);
+        }
+
+        $histories = TicketHistory::with([
+                'assignedBy.role',
+                'assignedTo.role'
+            ])
+            ->where('ticketid', $ticket->id)
+            ->orderBy('assigneddate')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($histories as $history) {
+            $reason = strtolower($history->reason ?? '');
+            $assignedToName = $this->activityUserName($history->assignedTo);
+
+            if (str_contains($reason, 'returned')) {
+                $type = 'returned';
+                $action = 'Returned the ticket to ' . $assignedToName . '.';
+            } elseif (str_contains($reason, 'claimed')) {
+                $type = 'claimed';
+                $action = 'Claimed the ticket.';
+            } else {
+                $type = 'assigned';
+                $action = 'Assigned the ticket to ' . $assignedToName . '.';
+            }
+
+            $activities->push([
+                'id' => 'history-' . $history->id,
+                'type' => $type,
+                'action' => $action,
+                'details' => $history->reason,
+                'date' => $this->activityDate($history->assigneddate),
+                'user' => $this->formatActivityUser($history->assignedBy)
+            ]);
+        }
+
+        // Seeded or older assigned tickets may predate assignment-history
+        // tracking, so their current assignment is still shown.
+        if ($ticket->assignedto !== null && $histories->isEmpty()) {
+            $activities->push([
+                'id' => 'ticket-assigned',
+                'type' => 'assigned',
+                'action' => 'Assigned the ticket to '
+                    . $this->activityUserName($ticket->assignedUser)
+                    . '.',
+                'details' => 'Assignment restored from the existing ticket data.',
+                'date' => $this->activityDate(
+                    $ticket->update_date ?: $ticket->creation_date
+                ),
+                'user' => null
+            ]);
+        }
+
+        $comments = TicketComment::with('user.role')
+            ->where('ticketid', $ticket->id)
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($comments as $comment) {
+            $isReply = $comment->parentid !== null;
+
+            $activities->push([
+                'id' => 'comment-' . $comment->id,
+                'type' => $isReply ? 'reply' : 'comment',
+                'action' => $isReply
+                    ? 'Replied to a comment.'
+                    : 'Added a comment.',
+                'details' => $comment->comment,
+                'date' => $this->activityDate($comment->date),
+                'user' => $this->formatActivityUser($comment->user)
+            ]);
+        }
+
+        // Closed tickets created before close logging was added still get a
+        // closing event from their existing closed_date value.
+        $hasCloseLog = $logs->contains(function (ActivityLog $log) {
+            return str_contains(strtolower($log->action), 'closed');
+        });
+
+        if ($ticket->closed_date && !$hasCloseLog) {
+            $activities->push([
+                'id' => 'ticket-closed',
+                'type' => 'closed',
+                'action' => 'Closed the ticket.',
+                'details' => null,
+                'date' => $this->activityDate($ticket->closed_date),
+                'user' => $this->formatActivityUser($ticket->assignedUser)
+            ]);
+        }
+
+        $activities = $activities
+            ->sortByDesc(function (array $activity) {
+                return Carbon::parse($activity['date'])->getTimestamp();
+            })
+            ->values();
+
+        return response()->json([
+            'ticket' => [
+                'id' => $ticket->id,
+                'title' => $ticket->title
+            ],
+            'activities' => $activities
+        ]);
+    }
+
+    private function canViewTicketActivity(User $user, Ticket $ticket): bool
+    {
+        $user->loadMissing('role');
+        $role = $user->role?->role;
+
+        if (in_array($role, ['Admin', 'Manager'])) {
+            return true;
+        }
+
+        if ($role === 'Employee') {
+            return (int) $ticket->createdby === (int) $user->id;
+        }
+
+        if ($role === 'IT Support Agent') {
+            return $ticket->assignedto !== null
+                && (int) $ticket->assignedto === (int) $user->id;
+        }
+
+        return false;
+    }
+
+    private function ticketSnapshot(Ticket $ticket): array
+    {
+        return [
+            'title' => $ticket->title,
+            'description' => $ticket->description,
+            'priorityid' => $ticket->priorityid,
+            'categoryid' => $ticket->categoryid,
+            'statusid' => $ticket->statusid,
+            'assignedto' => $ticket->assignedto
+        ];
+    }
+
+    private function recordTicketChanges(
+        Ticket $ticket,
+        array $before,
+        User $user
+    ): void {
+        $labels = [
+            'title' => 'title',
+            'description' => 'description',
+            'priorityid' => 'priority',
+            'categoryid' => 'category',
+            'statusid' => 'status',
+            'assignedto' => 'assigned agent'
+        ];
+
+        $changed = [];
+
+        foreach ($labels as $field => $label) {
+            if ((string) ($before[$field] ?? '') !== (string) ($ticket->{$field} ?? '')) {
+                $changed[] = $label;
+            }
+        }
+
+        if (empty($changed)) {
+            return;
+        }
+
+        if ($changed === ['status']) {
+            $statusName = Status::find($ticket->statusid)?->status;
+            $action = $statusName
+                ? 'Changed status to ' . $statusName . '.'
+                : 'Changed the ticket status.';
+        } else {
+            $action = 'Updated ticket: ' . implode(', ', $changed) . '.';
+        }
+
+        ActivityLog::create([
+            'ticketid' => $ticket->id,
+            'user_id' => $user->id,
+            'action' => $action,
+            'date' => now()
+        ]);
+    }
+
+    private function formatActivityUser(?User $user): ?array
+    {
+        if (!$user) {
+            return null;
+        }
+
+        $user->loadMissing('role');
+
+        return [
+            'id' => $user->id,
+            'firstname' => $user->firstname,
+            'username' => $user->username,
+            'role' => $user->role?->role
+        ];
+    }
+
+    private function activityUserName(?User $user): string
+    {
+        if (!$user) {
+            return 'an unknown user';
+        }
+
+        return $user->firstname
+            ?: ($user->username ?: 'User #' . $user->id);
+    }
+
+    private function activityDate($value): string
+    {
+        return Carbon::parse($value)->toISOString();
+    }
+
 }
