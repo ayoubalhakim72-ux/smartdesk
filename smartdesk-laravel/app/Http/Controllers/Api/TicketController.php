@@ -333,17 +333,17 @@ public function update(UpdateTicketRequest $request, $id)
             if ($request->hasAny([
                 'title',
                 'description',
-                'priorityid',
+                'statusid',
                 'assignedto'
             ])) {
                 return response()->json([
-                    'message' => 'IT Support Agents can edit only status and category.'
+                    'message' => 'IT Support Agents can edit only priority and category.'
                 ], 403);
             }
 
             $ticket->update([
+                'priorityid' => $request->priorityid ?? $ticket->priorityid,
                 'categoryid' => $request->categoryid ?? $ticket->categoryid,
-                'statusid' => $request->statusid ?? $ticket->statusid,
                 'update_date' => now(),
             ]);
 
