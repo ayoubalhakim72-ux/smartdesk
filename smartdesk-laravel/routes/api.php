@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tickets/{id}/assign', [TicketController::class, 'assign']);
     Route::put('/tickets/{id}/close', [TicketController::class, 'close']);
     Route::put('/tickets/{id}/return', [TicketController::class, 'returnTicket']);
+    Route::get('/tickets/{id}/activity', [TicketController::class, 'activity']);
     Route::get('/tickets/{ticketId}/comments', [TicketCommentController::class, 'index']);
     Route::post('/tickets/{ticketId}/comments', [TicketCommentController::class, 'store']);
 
