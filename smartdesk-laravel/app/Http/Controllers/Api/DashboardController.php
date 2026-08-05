@@ -79,7 +79,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Build one chronological timeline from every source of ticket activity.
+     * Build one newest-first timeline from every source of ticket activity.
      */
     private function adminActivityLog()
     {
@@ -245,11 +245,11 @@ class DashboardController extends Controller
 
         return $activities
             ->sort(function (array $first, array $second) {
-                $dateComparison = strcmp($first["date"], $second["date"]);
+                $dateComparison = strcmp($second["date"], $first["date"]);
 
                 return $dateComparison !== 0
                     ? $dateComparison
-                    : strcmp((string) $first["id"], (string) $second["id"]);
+                    : strcmp((string) $second["id"], (string) $first["id"]);
             })
             ->values();
     }
