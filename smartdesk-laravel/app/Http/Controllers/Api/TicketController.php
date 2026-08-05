@@ -310,22 +310,13 @@ public function update(UpdateTicketRequest $request, $id)
 
             }
 
-            if ($request->filled('statusid')) {
-
-                $ticket->statusid = $request->statusid;
-
-                $closedStatus = Status::where('status','Closed')->first();
-
-                if($closedStatus && $request->statusid == $closedStatus->id){
-
-                    $ticket->closed_date = now();
-
-                }
-
-                $ticket->update_date = now();
-
-                $ticket->save();
-            }
+            $ticket->update([
+                'title' => $request->title ?? $ticket->title,
+                'description' => $request->description ?? $ticket->description,
+                'priorityid' => $request->priorityid ?? $ticket->priorityid,
+                'categoryid' => $request->categoryid ?? $ticket->categoryid,
+                'update_date' => now(),
+            ]);
 
             break;
 
