@@ -4,223 +4,221 @@ import api from "../services/api";
 import "../styles/form.css";
 
 function TicketForm({ mode }) {
-
     const navigate = useNavigate();
     const { id } = useParams();
+
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const role =
+        typeof user?.role === "string"
+            ? user.role
+            : user?.role?.role || user?.role_name || user?.rolename;
+
+    const isLimitedEditor =
+        mode === "edit" &&
+        (role === "Manager" || role === "IT Support Agent");
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [priorityid, setPriorityid] = useState("");
     const [categoryid, setCategoryid] = useState("");
+    const [statusid, setStatusid] = useState("");
 
     const [priorities, setPriorities] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [statuses, setStatuses] = useState([]);
 
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-
         loadDropdowns();
 
         if (mode === "edit") {
             loadTicket();
         }
-
     }, []);
 
     async function loadDropdowns() {
-
         try {
-
-            const [priorityResponse, categoryResponse] = await Promise.all([
+            const [
+                priorityResponse,
+                categoryResponse,
+                statusResponse
+            ] = await Promise.all([
                 api.get("/priorities"),
-                api.get("/categories")
+                api.get("/categories"),
+                api.get("/statuses")
             ]);
 
             setPriorities(priorityResponse.data);
             setCategories(categoryResponse.data);
-
+            setStatuses(statusResponse.data);
         } catch (error) {
-
-            console.log(error);
-
+            console.error("Failed to load ticket form options:", error);
         }
-
     }
 
     async function loadTicket() {
-
         try {
-
             const response = await api.get(`/tickets/${id}`);
-
             const ticket = response.data;
 
             setTitle(ticket.title);
             setDescription(ticket.description);
             setPriorityid(ticket.priorityid);
             setCategoryid(ticket.categoryid);
-
+            setStatusid(ticket.statusid);
         } catch (error) {
-
-            console.log(error);
-
+            console.error("Failed to load ticket:", error);
+            alert(
+                error.response?.data?.message ||
+                "Failed to load the ticket."
+            );
+            navigate("/tickets");
         }
-
     }
 
-    async function handleSubmit(e) {
+    async function handleSubmit(event) {
+        event.preventDefault();
+        setLoading(true);
 
-    e.preventDefault();
+        try {
+            const data = isLimitedEditor
+                ? {
+                    categoryid,
+                    statusid
+                }
+                : {
+                    title,
+                    description,
+                    priorityid,
+                    categoryid
+                };
 
-    setLoading(true);
+            if (mode === "create") {
+                await api.post("/tickets", data);
+                alert("Ticket created successfully!");
+            } else {
+                await api.put(`/tickets/${id}`, data);
+                alert("Ticket updated successfully!");
+            }
 
-    try {
+            navigate("/tickets");
+        } catch (error) {
+            console.error("Failed to save ticket:", error);
 
-        const data = {
-            title,
-            description,
-            priorityid,
-            categoryid
-        };
-
-        console.log("Sending data:", data);
-
-        if (mode === "create") {
-
-            const response = await api.post("/tickets", data);
-
-            console.log("Server response:", response.data);
-
-            alert("Ticket created successfully!");
-
-        } else {
-
-            const response = await api.put(`/tickets/${id}`, data);
-
-            console.log("Server response:", response.data);
-
-            alert("Ticket updated successfully!");
-
+            alert(
+                error.response?.data?.message ||
+                "Something went wrong."
+            );
+        } finally {
+            setLoading(false);
         }
-
-        navigate("/tickets");
-
-    } catch (error) {
-
-        console.log(error);
-
-        alert(
-            error.response?.data?.message ||
-            "Something went wrong."
-        );
-
-    } finally {
-
-        setLoading(false);
-
     }
-
-}
 
     return (
-
         <form className="ticket-form" onSubmit={handleSubmit}>
-
             <h1>
-
                 {mode === "create"
                     ? "Create Ticket"
                     : "Edit Ticket"}
-
             </h1>
 
-            <div className="form-group">
+            {isLimitedEditor && (
+                <p>
+                    You can update only the ticket status and category.
+                </p>
+            )}
 
+            <div className="form-group">
                 <label>Title</label>
 
                 <input
                     type="text"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
+                    onChange={(event) => setTitle(event.target.value)}
+                    disabled={isLimitedEditor}
+                    required={!isLimitedEditor}
                 />
-
             </div>
 
             <div className="form-group">
-
                 <label>Description</label>
 
                 <textarea
                     rows="6"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
+                    onChange={(event) => setDescription(event.target.value)}
+                    disabled={isLimitedEditor}
+                    required={!isLimitedEditor}
                 />
-
             </div>
 
             <div className="form-row">
-
                 <div className="form-group">
-
                     <label>Category</label>
 
                     <select
                         value={categoryid}
-                        onChange={(e) => setCategoryid(e.target.value)}
+                        onChange={(event) => setCategoryid(event.target.value)}
                         required
                     >
-
                         <option value="">Select Category</option>
 
-                        {categories.map(category => (
-
+                        {categories.map((category) => (
                             <option
                                 key={category.id}
                                 value={category.id}
                             >
-
                                 {category.category}
-
                             </option>
-
                         ))}
-
                     </select>
-
                 </div>
 
-                <div className="form-group">
+                {isLimitedEditor ? (
+                    <div className="form-group">
+                        <label>Status</label>
 
-                    <label>Priority</label>
+                        <select
+                            value={statusid}
+                            onChange={(event) => setStatusid(event.target.value)}
+                            required
+                        >
+                            <option value="">Select Status</option>
 
-                    <select
-                        value={priorityid}
-                        onChange={(e) => setPriorityid(e.target.value)}
-                        required
-                    >
+                            {statuses.map((status) => (
+                                <option
+                                    key={status.id}
+                                    value={status.id}
+                                >
+                                    {status.status}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                ) : (
+                    <div className="form-group">
+                        <label>Priority</label>
 
-                        <option value="">Select Priority</option>
+                        <select
+                            value={priorityid}
+                            onChange={(event) => setPriorityid(event.target.value)}
+                            required
+                        >
+                            <option value="">Select Priority</option>
 
-                        {priorities.map(priority => (
-
-                            <option
-                                key={priority.id}
-                                value={priority.id}
-                            >
-
-                                {priority.priority}
-
-                            </option>
-
-                        ))}
-
-                    </select>
-
-                </div>
-
+                            {priorities.map((priority) => (
+                                <option
+                                    key={priority.id}
+                                    value={priority.id}
+                                >
+                                    {priority.priority}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </div>
 
             <button
@@ -228,19 +226,14 @@ function TicketForm({ mode }) {
                 className="submit-btn"
                 disabled={loading}
             >
-
                 {loading
                     ? "Saving..."
                     : mode === "create"
                     ? "Create Ticket"
                     : "Update Ticket"}
-
             </button>
-
         </form>
-
     );
-
 }
 
 export default TicketForm;
