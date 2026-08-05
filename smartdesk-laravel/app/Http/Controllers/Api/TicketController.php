@@ -248,7 +248,6 @@ public function update(UpdateTicketRequest $request, $id)
     switch ($user->role->role) {
 
         case 'Admin':
-        case 'Manager':
 
             $ticket->update([
                 'title' => $request->title ?? $ticket->title,
@@ -257,6 +256,27 @@ public function update(UpdateTicketRequest $request, $id)
                 'categoryid' => $request->categoryid ?? $ticket->categoryid,
                 'statusid' => $request->statusid ?? $ticket->statusid,
                 'assignedto' => $request->assignedto ?? $ticket->assignedto,
+                'update_date' => now(),
+            ]);
+
+            break;
+
+        case 'Manager':
+
+            if ($request->hasAny([
+                'title',
+                'description',
+                'priorityid',
+                'assignedto'
+            ])) {
+                return response()->json([
+                    'message' => 'Managers can edit only status and category.'
+                ], 403);
+            }
+
+            $ticket->update([
+                'categoryid' => $request->categoryid ?? $ticket->categoryid,
+                'statusid' => $request->statusid ?? $ticket->statusid,
                 'update_date' => now(),
             ]);
 
@@ -310,11 +330,20 @@ public function update(UpdateTicketRequest $request, $id)
 
             }
 
+            if ($request->hasAny([
+                'title',
+                'description',
+                'priorityid',
+                'assignedto'
+            ])) {
+                return response()->json([
+                    'message' => 'IT Support Agents can edit only status and category.'
+                ], 403);
+            }
+
             $ticket->update([
-                'title' => $request->title ?? $ticket->title,
-                'description' => $request->description ?? $ticket->description,
-                'priorityid' => $request->priorityid ?? $ticket->priorityid,
                 'categoryid' => $request->categoryid ?? $ticket->categoryid,
+                'statusid' => $request->statusid ?? $ticket->statusid,
                 'update_date' => now(),
             ]);
 
