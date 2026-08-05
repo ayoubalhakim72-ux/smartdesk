@@ -654,7 +654,7 @@ public function assign(Request $request, $id)
 }
 
     /**
-     * Return every recorded action for one ticket in chronological order.
+     * Return every recorded action for one ticket, newest first.
      */
     public function activity(Request $request, $id)
     {
@@ -801,8 +801,12 @@ public function assign(Request $request, $id)
         }
 
         $activities = $activities
-            ->sortBy(function (array $activity) {
-                return Carbon::parse($activity['date'])->getTimestamp();
+            ->sort(function (array $first, array $second) {
+                $dateComparison = strcmp($second['date'], $first['date']);
+
+                return $dateComparison !== 0
+                    ? $dateComparison
+                    : strcmp((string) $second['id'], (string) $first['id']);
             })
             ->values();
 
