@@ -126,7 +126,9 @@ function Tickets() {
     const canEditTicket = (ticket) =>
         role === "Admin" ||
         role === "Manager" ||
-        role === "IT Support Agent" ||
+        (role === "IT Support Agent" &&
+            ticket.assignedto !== null &&
+            Number(ticket.assignedto) === Number(user?.id)) ||
         (role === "Employee" && ticket.assignedto === null);
 
     const hasActiveFilters = categoryId || statusId || selectedDate;
